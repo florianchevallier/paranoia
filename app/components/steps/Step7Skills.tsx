@@ -67,6 +67,12 @@ const SERVICE_SPECIALIZATIONS: { [key: string]: SkillCategory[] } = {
 };
 
 export default function Step7Skills({ character, updateSkills }: Step7SkillsProps) {
+  // Niveaux minimums requis pour certaines compétences obligatoires
+  const REQUIRED_MIN_LEVELS: Record<string, number> = {
+    'activites-de-base': 1,
+    'combat-armes-de-tir': 2,
+    'developpement-personnel': 1,
+  };
   
   // État local pour les points de compétences alloués
   const [allocatedSkills, setAllocatedSkills] = useState<{[key: string]: number}>(() => {
@@ -124,13 +130,20 @@ export default function Step7Skills({ character, updateSkills }: Step7SkillsProp
   const deallocateSkill = useCallback((skillId: string) => {
     setAllocatedSkills(prev => {
       const currentLevel = prev[skillId] || 0;
-      if (currentLevel <= 0) return prev;
+      const minLevel = REQUIRED_MIN_LEVELS[skillId] ?? 0;
+      if (currentLevel <= minLevel) return prev;
       
       const newAllocation = { ...prev };
-      if (currentLevel === 1) {
-        delete newAllocation[skillId];
+      const nextLevel = currentLevel - 1;
+      if (nextLevel <= 0) {
+        // Si aucun niveau requis, on peut supprimer la clé
+        if (minLevel === 0) {
+          delete newAllocation[skillId];
+        } else {
+          newAllocation[skillId] = minLevel;
+        }
       } else {
-        newAllocation[skillId] = currentLevel - 1;
+        newAllocation[skillId] = Math.max(nextLevel, minLevel);
       }
       
       return newAllocation;
@@ -261,8 +274,8 @@ export default function Step7Skills({ character, updateSkills }: Step7SkillsProp
               {category.skills.map((skill) => {
                 const currentLevel = allocatedSkills[skill.id] || 0;
                 const canAllocate = remainingPoints > 0;
-                const canDeallocate = currentLevel > 0 && skill.id !== 'activites-de-base' && 
-                                    skill.id !== 'combat-armes-de-tir' && skill.id !== 'developpement-personnel';
+                const minLevel = REQUIRED_MIN_LEVELS[skill.id] ?? 0;
+                const canDeallocate = currentLevel > minLevel;
                 
                 return (
                   <div key={skill.id} className="flex justify-between items-center p-3 bg-red-900/30 rounded">
@@ -271,7 +284,7 @@ export default function Step7Skills({ character, updateSkills }: Step7SkillsProp
                         {skill.name} ({currentLevel || 0})
                       </div>
                       <div className="text-sm text-red-400">
-                        Pourcentage : {getSkillPercentage(skill.id, currentLevel || 1)}%
+                        Pourcentage : {getSkillPercentage(skill.id, currentLevel)}%
                       </div>
                     </div>
                     

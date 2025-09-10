@@ -46,7 +46,7 @@ export default function Step4Service({ character, updateService, addRoll, update
     updateService(serviceId);
   };
 
-  const selectedService = character.service ? SERVICES.find(s => s.id === character.service.id) : undefined;
+  const selectedService = character.service ? SERVICES.find(s => s.id === character.service!.id) : undefined;
 
   return (
     <div className="space-y-6">
