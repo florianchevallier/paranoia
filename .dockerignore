@@ -1,4 +1,10 @@
-.react-router
-build
 node_modules
+dist
+.git
+.gitignore
+.vscode
+.github
+*.log
+npm-debug.log*
 README.md
+.DS_Store 
